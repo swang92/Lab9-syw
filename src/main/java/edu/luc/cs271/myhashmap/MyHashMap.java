@@ -30,10 +30,10 @@ public class MyHashMap<K, V> implements Map<K, V> {
 
   @Override
   public int size() {
-    // TODO add the sizes of all the chains
     int result = 0;
-
-
+    for (int i = 0; i < table.size(); i++) {
+      table.get(i).size();
+    }
     return result;
   }
 
@@ -44,36 +44,56 @@ public class MyHashMap<K, V> implements Map<K, V> {
 
   @Override
   public boolean containsKey(final Object key) {
-    // TODO follow basic approach of remove below (though this will be much simpler)
     final int index = calculateIndex(key);
-
-
+    final Iterator<Entry<K, V>> iter = table.get(index).iterator();
+    while (iter.hasNext()) {
+      final Entry<K, V> entry = iter.next();
+      if (entry.getKey().equals(key)) {
+        return true;
+      }
+    }
     return false;
   }
 
   @Override
   public boolean containsValue(final Object value) {
-    // TODO follow basic approach of remove below (though this will be much simpler)
-
-
+    final int index = calculateIndex(value);
+    final Iterator<Entry<K, V>> iter = table.get(index).iterator();
+    while (iter.hasNext()) {
+      final Entry<K, V> entry = iter.next();
+      if (entry.getValue().equals(value)) {
+        return true;
+      }
+    }
     return false;
   }
 
+
   @Override
   public V get(final Object key) {
-    // TODO follow basic approach of remove below (though this will be simpler)
     final int index = calculateIndex(key);
-
-
+    final Iterator<Entry<K, V>> iter = table.get(index).iterator();
+    while (iter.hasNext()) {
+      final Entry<K, V> entry = iter.next();
+      if (entry.getKey().equals(key)) {
+        return entry.getValue();
+      }
+    }
     return null;
   }
 
   @Override
   public V put(final K key, final V value) {
-    // TODO follow basic approach of remove below (this will be similar)
     final int index = calculateIndex(key);
-
-
+    final Iterator<Entry<K, V>> iter = table.get(index).iterator();
+    while (iter.hasNext()) {
+      final Entry<K, V> entry = iter.next();
+      if (entry.getKey().equals(key)) {
+        final V oldValue = entry.getValue();
+        iter.remove();
+        return oldValue;
+      }
+    }
     return null;
   }
 
@@ -94,68 +114,83 @@ public class MyHashMap<K, V> implements Map<K, V> {
 
   @Override
   public void putAll(final Map<? extends K, ? extends V> m) {
-    // TODO add each entry in m's entrySet
-
-
+    for (Map.Entry<? extends K, ? extends V> entry : m.entrySet()) {
+      this.put(entry.getKey(), entry.getValue());
+    }
   }
 
   @Override
   public void clear() {
-    // TODO clear each chain
-
-
-  }
-
-  /** The resulting keySet is not "backed" by the Map, so we keep it unmodifiable. */
-  @Override
-  public Set<K> keySet() {
-    final Set<K> result = new HashSet<>();
-    // TODO populate the set
-
-
-    return Collections.unmodifiableSet(result);
-  }
-
-  /** The resulting values collection is not "backed" by the Map, so we keep it unmodifiable. */
-  @Override
-  public Collection<V> values() {
-    final List<V> result = new LinkedList<>();
-    // TODO populate the list
-
-
-    return Collections.unmodifiableCollection(result);
-  }
-
-  /** The resulting entrySet is not "backed" by the Map, so we keep it unmodifiable. */
-  @Override
-  public Set<Entry<K, V>> entrySet() {
-    final Set<Entry<K, V>> result = new HashSet<>();
-    // TODO populate the set
-
-
-    return Collections.unmodifiableSet(result);
-  }
-
-  @Override
-  public String toString() {
-    // TODO return the string representation of the underlying table
-    return "";
-  }
-
-  public boolean equals(final Object that) {
-    if (this == that) {
-      return true;
-    } else if (!(that instanceof Map)) {
-      return false;
-    } else {
-      // TODO simply compare the entry sets
-      return false;
+    for (int i = 0; i < table.size(); i++) {
+      table.get(i).clear();
     }
   }
 
-  private int calculateIndex(final Object key) {
-    // positive remainder (as opposed to %)
-    // required in case hashCode is negative!
-    return Math.floorMod(key.hashCode(), table.size());
+    /** The resulting keySet is not "backed" by the Map, so we keep it unmodifiable. */
+    @Override
+    public Set<K> keySet () {
+      final Set<K> result = new HashSet<>();
+      int index = 0;
+      final Iterator<Entry<K, V>> currChain = table.get(index).iterator();
+      for(Entry<K,V> e : table.get(index))
+        while (currChain.hasNext()) {
+          final Entry<K, V> entry = currChain.next();
+          result.add(entry.getKey());
+        }
+      return Collections.unmodifiableSet(result);
+    }
+
+    /** The resulting values collection is not "backed" by the Map, so we keep it unmodifiable. */
+    @Override
+    public Collection<V> values () {
+      final List<V> result = new LinkedList<>();
+      int index = 0;
+      final Iterator<Entry<K, V>> currChain = table.get(index).iterator();
+      for(Entry<K,V> e : table.get(index))
+        while (currChain.hasNext()) {
+          final Entry<K, V> entry = currChain.next();
+          result.add(entry.getValue());
+        }
+      return Collections.unmodifiableCollection(result);
+    }
+
+    /** The resulting entrySet is not "backed" by the Map, so we keep it unmodifiable. */
+    @Override
+    public Set<Entry<K, V>> entrySet () {
+      int index = 0;
+      final Iterator<Entry<K, V>> currChain = table.get(index).iterator();
+      final Set<Entry<K, V>> result = new HashSet<>();
+
+      for(Entry<K,V> e : table.get(index))
+      while (currChain.hasNext()) {
+        final Entry<K, V> entry = currChain.next();
+        result.add(entry);
+      }
+      return Collections.unmodifiableSet(result);
+    }
+
+    @Override
+    public String toString () {
+      return table.toString();
+    }
+
+    public boolean equals ( final Object that){
+      if (this == that) {
+        return true;
+      } else if (!(that instanceof Map)) {
+        return false;
+      } else if (this.entrySet() == ((Map) that).entrySet()){
+        return true;
+      } else
+      return false;
+    }
+
+    private int calculateIndex ( final Object key){
+      // positive remainder (as opposed to %)
+      // required in case hashCode is negative!
+      return Math.floorMod(key.hashCode(), table.size());
+    }
   }
-}
+
+
+
